@@ -1,0 +1,55 @@
+---
+title: "Earning Call Analysis"
+author: "Joseph Lee (sl5nj), Umar Abushaban (uba6z), William Cull (wjc5rt)"
+date: "3/1/2022"
+output:
+  html_document:
+    number_sections: yes
+    toc: yes
+    theme: sandstone
+    toc_float: yes
+    code_folding: hide
+  pdf_document:
+    
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+<style>
+h1.title {
+  font-size: 30px;
+}
+h1 {
+  font-size: 26px;
+}
+h2 {
+  font-size: 22px;
+}
+h3 { 
+  font-size: 18px;
+}
+
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Summary
+
+Load libraries 
+```{r, include=FALSE}
+library(tidyverse)
+library(tidytext)
+library(ggwordcloud)
+library(textdata)
+```
+
+## Data Validation 
+
+## Skeleton model
+```{r}
+
+```
+
