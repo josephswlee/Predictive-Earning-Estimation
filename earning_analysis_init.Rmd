@@ -44,12 +44,97 @@ library(tidyverse)
 library(tidytext)
 library(ggwordcloud)
 library(textdata)
+library(httr)
+library(rjson)
+```
+
+## API Call
+```{r}
+require(httr)
+
+headers = c(
+  `Upgrade-Insecure-Requests` = '1'
+)
+
+params = list(
+  `datatype` = 'json'
+  #`apikey` = 'ec9d29f143d5a1cf9ee6c5a2232736f9'
+)
+
+res <- httr::GET(url = 'https://financialmodelingprep.com/api/v3/earning_call_transcript/AAPL?quarter=1&year=2015&apikey=ec9d29f143d5a1cf9ee6c5a2232736f9', httr::add_headers(.headers=headers), query = params)
 ```
 
 ## Data Validation 
 
-## Skeleton model
+Loading txt
 ```{r}
+aapl_15_Q1 <- tibble(text = read_lines("~/Dev/DS4002/4002_handsOn/project2/aapl_15_Q1.txt"))
+
+aapl_Words <-  aapl_15_Q1 %>% unnest_tokens(word, text)
+aapl_SW <- aapl_Words %>% anti_join(stop_words)
+aapl_Count <- aapl_Words %>% count(word, sort=TRUE)
+
+aapl_Count
+```
+
+Top 6 Words (Excluding Stop Words)
+```{r, echo=FALSE, warning = FALSE, include=FALSE}
+# Count of Each Word
+aapl_WordCount <- aapl_15_Q1 %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words) %>% 
+  count(word, sort = TRUE)
 
 ```
+
+## Sentiment Analysis for aapl
+```{r, echo=FALSE, warning = FALSE, include=FALSE}
+aaplSentiment_affin <- aapl_Words %>%
+  inner_join(get_sentiments("afinn"))
+
+aaplSentiment_nrc <- aapl_Words %>%
+  inner_join(get_sentiments("nrc"))
+
+aaplSentiment_bing <- aapl_Words %>%
+  inner_join(get_sentiments("bing"))
+
+table(aaplSentiment_bing$sentiment)
+table(aaplSentiment_nrc$sentiment)
+
+```
+
+```{r, echo=FALSE, warning = FALSE}
+(ggplot(data = aaplSentiment_affin, 
+       aes(x=value))+
+  geom_histogram()+
+  ggtitle("AAPL Sentiment Range")+
+  theme_minimal())
+```
+
+## Sentiment Analysis Results (Snapshot)
+```{r, echo=FALSE, warning = FALSE}
+# Display First Five Sentiment Analyses
+cat("Afinn Values:", head(aaplSentiment_affin$value), "\n")
+cat("NRC Sentiment:", head(aaplSentiment_nrc$sentiment), "\n")
+cat("Bing Values:", head(aaplSentiment_bing$sentiment))
+```
+
+```{r, echo=FALSE, warning = FALSE}
+# Plot Histogram of the Afinn Values
+ggplot(data=aaplSentiment_affin, 
+       aes(x=value)) +
+  geom_histogram(bins=15) +
+  ggtitle("AAPL Sentiment Range") +
+  theme_minimal()
+```
+
+## Wordcloud: Top 50 Words for aapl
+```{r, echo=FALSE, warning = FALSE}
+# 
+ggplot(aapl_WordCount[1:50,], aes(label=word, size=n)
+       ) +
+  geom_text_wordcloud() +
+  theme_minimal()
+```
+
 
