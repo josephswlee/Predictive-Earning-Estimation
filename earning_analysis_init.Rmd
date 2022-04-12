@@ -68,70 +68,71 @@ res <- httr::GET(url = 'https://financialmodelingprep.com/api/v3/earning_call_tr
 
 Loading txt
 ```{r}
-aapl_15_Q1 <- tibble(text = read_lines("~/Dev/DS4002/4002_handsOn/project2/aapl_15_Q1.txt"))
+tsla_15_Q1 <- tibble(text = read_lines("~/Dev/DS4002/4002_handsOn/project2/EarningCalls/2015/TSLA-15Q1.txt"))
 
-aapl_Words <-  aapl_15_Q1 %>% unnest_tokens(word, text)
-aapl_SW <- aapl_Words %>% anti_join(stop_words)
-aapl_Count <- aapl_Words %>% count(word, sort=TRUE)
+tsla15q1_Words <-  tsla_15_Q1 %>% unnest_tokens(word, text)
+tsla15q1_SW <- tsla15q1_Words %>% anti_join(stop_words)
+tsla15q1_Count <- tsla15q1_Words %>% count(word, sort=TRUE)
 
-aapl_Count
+tsla15q1_Count
 ```
 
 Top 6 Words (Excluding Stop Words)
 ```{r, echo=FALSE, warning = FALSE, include=FALSE}
 # Count of Each Word
-aapl_WordCount <- aapl_15_Q1 %>%
+tsla15q1_WordCount <- tsla_15_Q1 %>%
   unnest_tokens(word, text) %>%
   anti_join(stop_words) %>% 
   count(word, sort = TRUE)
 
+tsla15q1_WordCount
 ```
 
 ## Sentiment Analysis for aapl
 ```{r, echo=FALSE, warning = FALSE, include=FALSE}
-aaplSentiment_affin <- aapl_Words %>%
+tsla15q1Sentiment_affin <- tsla15q1_Words %>%
   inner_join(get_sentiments("afinn"))
 
-aaplSentiment_nrc <- aapl_Words %>%
+tsla15q1Sentiment_nrc <- tsla15q1_Words %>%
   inner_join(get_sentiments("nrc"))
 
-aaplSentiment_bing <- aapl_Words %>%
+tsla15q1Sentiment_bing <- tsla15q1_Words %>%
   inner_join(get_sentiments("bing"))
 
-table(aaplSentiment_bing$sentiment)
-table(aaplSentiment_nrc$sentiment)
+table(tsla15q1Sentiment_bing$sentiment)
+table(tsla15q1Sentiment_nrc$sentiment)
 
 ```
 
 ```{r, echo=FALSE, warning = FALSE}
-(ggplot(data = aaplSentiment_affin, 
+(ggplot(data = tsla15q1Sentiment_affin, 
        aes(x=value))+
   geom_histogram()+
-  ggtitle("AAPL Sentiment Range")+
+  ggtitle("TSLA 15 Q1 Sentiment Range")+
   theme_minimal())
 ```
 
 ## Sentiment Analysis Results (Snapshot)
 ```{r, echo=FALSE, warning = FALSE}
 # Display First Five Sentiment Analyses
-cat("Afinn Values:", head(aaplSentiment_affin$value), "\n")
-cat("NRC Sentiment:", head(aaplSentiment_nrc$sentiment), "\n")
-cat("Bing Values:", head(aaplSentiment_bing$sentiment))
+cat("Afinn Values:", head(tsla15q1Sentiment_affin$value), "\n")
+cat("NRC Sentiment:", head(tsla15q1Sentiment_nrc$sentiment), "\n")
+cat("Bing Values:", head(tsla15q1Sentiment_bing$sentiment))
 ```
 
 ```{r, echo=FALSE, warning = FALSE}
 # Plot Histogram of the Afinn Values
-ggplot(data=aaplSentiment_affin, 
+ggplot(data=tsla15q1Sentiment_affin, 
        aes(x=value)) +
   geom_histogram(bins=15) +
-  ggtitle("AAPL Sentiment Range") +
+  ggtitle("TSLA 15 Q1 Sentiment Range") +
   theme_minimal()
 ```
 
 ## Wordcloud: Top 50 Words for aapl
 ```{r, echo=FALSE, warning = FALSE}
 # 
-ggplot(aapl_WordCount[1:50,], aes(label=word, size=n)
+ggplot(tsla15q1_WordCount[1:50,], aes(label=word, size=n)
        ) +
   geom_text_wordcloud() +
   theme_minimal()
