@@ -1,0 +1,52 @@
+---
+title: "EDA"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(ggwordcloud)
+library(textdata)
+library(httr)
+library(rjson)
+```
+```{r}
+data = read.csv("./EDA - DS4002 - Main Sheet.csv")
+
+data$Ticker = as.factor(data$Ticker)
+data$Quarter...Year = as.factor(data$Quarter...Year)
+names(data)[4] <- "trd_volume_7day"
+data$trd_volume_7day =as.numeric(gsub(",","",data$trd_volume_7day))
+```
+
+```{r, fig.width=5, fig,length=20}
+  ggplot(data, aes(x=Ticker, y=Market.Cap, color =Quarter...Year)) +
+  geom_point(alpha = 1/20) +
+  geom_point(size=0.1) +
+  labs(title = "", x="", y="",) +
+  geom_jitter()
+```
+
+```{r, fig.width=5, fig,length=20}
+  ggplot(data, aes(x=Ticker, y=trd_volume_7day)) +
+  geom_bar(stat="identity", fill="steelblue") +
+      xlab("State") + ylab("Number of Accidents") + 
+      labs(title="States with Most Accidents (2018-2020)") 
+```
+
+
+
+
+
+
+
+
+
+
+
+
