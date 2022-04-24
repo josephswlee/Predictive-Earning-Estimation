@@ -1,0 +1,180 @@
+---
+title: "Untitled"
+author: "Joseph Lee (sl5nj) , Iain Muir (iam9ez) , Kent Williams (kbw3bb)"
+date: "4/24/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE}
+library(randomForest)
+library(rio)
+library(plyr)
+library(tidyverse)
+library(rpart)
+library(psych)
+library(pROC)
+library(rpart.plot)
+library(rattle)
+library(caret)
+library(mlbench)
+library(MLmetrics)
+library(ROCR)
+library(mltools)
+library(data.table)
+library(plotly)
+```
+
+```{r}
+df <- read.csv("C:/Users/Sangwoo/Dev/ds4002/mainsheet.csv")
+
+View(df)
+
+df$Stock.Price.Delta.Between.Dates
+
+range(df$Stock.Price.Delta.Between.Dates)
+
+(column_index <- tibble(colnames(eda)))
+
+View(column_index)
+
+range(df$Subjectivity)
+
+median(df$Stock.Price.Delta.Between.Dates)
+
+str(df)
+
+eda <- df
+
+eda[, c(1,2)] <- lapply(eda[, c(1,2)], as.factor)
+
+eda[, c(6,8)] <- lapply(eda[, c(6,8)], as.character)
+
+eda$Release.Date <- as.Date(eda$Release.Date, "%m/%d/%y")
+eda$Call.Date <- as.Date(eda$Call.Date, "%m/%d/%y")
+
+
+str(eda)
+
+eda <- eda[, -c(19)]
+
+View(eda)
+
+eda$Stock.Price.Delta.Between.Dates <- ifelse(eda$Stock.Price.Delta.Between.Dates >-0.00225, 1, 0)
+
+eda <- eda[, -c(6,8)]
+0.512-0.051
+```
+
+```{r}
+sample_rows = 1:nrow(eda)
+
+set.seed(1984) #sample(x, size, replace = FALSE, prob = NULL)
+test_rows = sample(sample_rows,
+                   dim(eda)[1]*.10, #start with 10% of our dataset, could do 20%
+                   # but random forest does require more training data because of the 
+                   # sampling so 90% might be a better approach with this small of a dataset
+                   replace = FALSE)# We don't want duplicate samples
+
+# Partition the data between training and test sets using the row numbers the
+# sample() function selected.
+eda_train = eda[-test_rows,]
+eda_test = eda[test_rows,]
+
+dim(eda_train)
+```
+
+```{r}
+###### for tune
+
+set.seed(1984) #sample(x, size, replace = FALSE, prob = NULL)
+test_rows = sample(sample_rows,
+                   dim(eda_test)[1]*.50, #start with 10% of our dataset, could do 20%
+                   # but random forest does require more training data because of the 
+                   # sampling so 90% might be a better approach with this small of a dataset
+                   replace = FALSE)# We don't want duplicate samples
+
+tune = eda_test[-test_rows,]
+test = eda_test[test_rows,]
+
+set.seed(1984) #sample(x, size, replace = FALSE, prob = NULL)
+test_rows = sample(sample_rows,
+                   dim(tune)[1]*.50, #start with 10% of our dataset, could do 20%
+                   # but random forest does require more training data because of the 
+                   # sampling so 90% might be a better approach with this small of a dataset
+                   replace = FALSE)# We don't want duplicate samples
+
+x_tune = tune[-test_rows,]
+y_tune = tune[test_rows,]
+```
+
+```{r}
+mytry_tune <- function(x){
+  xx <- dim(x)[2]-1
+  sqrt(xx)
+}
+mytry_tune(eda)
+```
+4.472
+
+```{r}
+set.seed(2023)  
+
+eda_RF = randomForest(as.factor(Stock.Price.Delta.Between.Dates)~.,   
+                            eda_train,    
+                            ntree = 500,      
+                            mtry = 5,         
+                            replace = TRUE,   
+                            sampsize = 44,    
+                            nodesize = 5,    
+                            importance = TRUE, 
+                            proximity = FALSE, 
+                            norm.votes = TRUE,
+                            do.trace = TRUE,  
+                            keep.forest = TRUE,
+                            keep.inbag = TRUE)   
+```
+
+
+```{r}
+eda_RF
+```
+
+```{r}
+set.seed(2023)  
+
+eda_RF2 = randomForest(as.factor(Stock.Price.Delta.Between.Dates)~.,   
+                            eda_train,    
+                            ntree = 2500,      
+                            mtry = 4,         
+                            replace = TRUE,   
+                            sampsize = 44,    
+                            nodesize = 10,    
+                            importance = TRUE, 
+                            proximity = FALSE, 
+                            norm.votes = TRUE,
+                            do.trace = TRUE,  
+                            keep.forest = TRUE,
+                            keep.inbag = TRUE)   
+```
+
+```{r}
+eda_RF2
+```
+
+Call:
+ randomForest(formula = as.factor(Stock.Price.Delta.Between.Dates) ~      ., data = eda_train, ntree = 5500, mtry = 4, replace = TRUE,      sampsize = 44, nodesize = 10, importance = TRUE, proximity = FALSE,      norm.votes = TRUE, do.trace = TRUE, keep.forest = TRUE, keep.inbag = TRUE) 
+               Type of random forest: classification
+                     Number of trees: 5500
+No. of variables tried at each split: 4
+
+        OOB estimate of  error rate: 59.09%
+Confusion matrix:
+   0  1 class.error
+0  8 14   0.6363636
+1 12 10   0.5454545
