@@ -1,6 +1,6 @@
 ---
 title: "Untitled"
-author: "Joseph Lee (sl5nj) , Iain Muir (iam9ez) , Kent Williams (kbw3bb)"
+author: ""
 date: "4/24/2022"
 output: html_document
 editor_options: 
