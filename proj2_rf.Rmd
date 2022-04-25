@@ -31,9 +31,9 @@ library(plotly)
 ```
 
 ```{r}
-df <- read.csv("C:/Users/Sangwoo/Dev/ds4002/mainsheet.csv")
+df <- read.csv("~/Dev/DS4002/4002_handsOn/project2/mainsheet.csv")
 
-View(df)
+#View(df)
 
 df$Stock.Price.Delta.Between.Dates
 
@@ -41,7 +41,7 @@ range(df$Stock.Price.Delta.Between.Dates)
 
 (column_index <- tibble(colnames(eda)))
 
-View(column_index)
+#View(column_index)
 
 range(df$Subjectivity)
 
@@ -63,7 +63,7 @@ str(eda)
 
 eda <- eda[, -c(19)]
 
-View(eda)
+#View(eda)
 
 eda$Stock.Price.Delta.Between.Dates <- ifelse(eda$Stock.Price.Delta.Between.Dates >-0.00225, 1, 0)
 
@@ -128,7 +128,7 @@ set.seed(2023)
 eda_RF = randomForest(as.factor(Stock.Price.Delta.Between.Dates)~.,   
                             eda_train,    
                             ntree = 500,      
-                            mtry = 5,         
+                            mtry = 4,         
                             replace = TRUE,   
                             sampsize = 44,    
                             nodesize = 5,    
@@ -174,7 +174,245 @@ Call:
 No. of variables tried at each split: 4
 
         OOB estimate of  error rate: 59.09%
-Confusion matrix:
+Confusion matrix: 
    0  1 class.error
 0  8 14   0.6363636
 1 12 10   0.5454545
+
+*Trying KNN*
+
+```{r}
+library(tidyverse)
+library(plotly)
+library(htmltools)
+library(devtools)
+library(caret)
+library(NbClust)
+library(corrplot)
+
+```
+
+```{r}
+edak <- read_csv("~/Dev/DS4002/4002_handsOn/project2/mainsheet.csv")
+
+View(edak)
+(edak_index <- tibble(colnames(edak)))
+View(edak_index)
+edakCor <- edak[, -c(1,2,19)]
+View(edakCor)
+(edakCor_index <- tibble(colnames(edakCor)))
+edakCor <- edakCor[, -c(4,6)]
+
+corrCoe <- round(cor(edakCor, use = "complete.obs"), digits = 2)
+
+corrCoe
+
+heart_cor = edakCor
+
+heart_cor = round(cor(heart_cor),1)
+  
+p.mat <- cor_pmat(heart_cor)
+head(p.mat[, 1:4])
+ggcorrplot(heart_cor)
+
+edakNor <- edak
+
+View(edakNor)
+
+(edakNor_index <- tibble(colnames(edakNor)))
+View(edakNor_index)
+
+View(edak)
+edakNor <- edakNor[,-c(19)]
+
+edakNor[,c(1,2)] <- lapply(edakNor[,c(1,2)], as.factor)
+
+edakNor <- edakNor[,-c(1,2)]
+
+#Normalization function
+normalize <- function(x){
+  (x - min(x)) / (max(x) - min(x))
+}
+
+(edakNor_index <- tibble(colnames(edakNor)))
+edakNor <- edakNor[,-c(4,6)]
+View(edakNor_index)
+str(edakNor)
+edakNor <- normalize(edakNor)
+
+clust_data_edak = select_if(edakNor,is.numeric)
+
+View(clust_data_edak)
+
+clust_data_edak <- clust_data_edak[,-c(2)] # dropping gross margin for clustering
+
+edakNor <- edakNor[, -c(1,4,6,15)]
+
+edakNor <- normalize(edakNor)
+
+edakSta <- edak
+
+(edakSta_index <- tibble(colnames(edakSta)))
+
+View(edakSta)
+View(edakSta_index)
+
+edakSta <- edakSta[, -c(1,2,6,8,19)]
+
+edakSta_scal <- scale(edakSta)
+
+str(edakSta)
+View(edakSta_scal)
+
+edakSta_scale <- edakSta_scal[, -c(8)] #dropping revenue delta
+
+clust_data_edak = select_if(edakSta,is.numeric)
+View(clust_data_edak)
+
+clust_data_edak <- clust_data_edak[, -c(8)]
+
+clust_data_edak <- scale(clust_data_edak)
+```
+
+```{r}
+set.seed(1)
+kmeans_obj_edak = kmeans(clust_data_edak, centers = 3, algorithm = "Lloyd")
+#kmeans_obj_nba
+
+#Run Nbcluster
+(nbclust_obj_edak = NbClust(data = clust_data_edak, method = "kmeans"))
+
+freq_k_edak = nbclust_obj_edak$Best.nc[1,]
+freq_k_edak = data.frame(freq_k_edak)
+
+ggplot(freq_k_edak,
+       aes(x = freq_k_edak)) +
+  geom_bar() +
+  scale_x_continuous(breaks = seq(0, 15, by = 1)) +
+  scale_y_continuous(breaks = seq(0, 12, by = 1)) +
+  labs(x = "Number of Clusters",
+       y = "Number of Votes",
+       title = "Earning Call Cluster Analysis")
+
+```
+
+
+```{r, echo=FALSE, warning = FALSE, include=FALSE}
+#3 cluster
+#Check how good clustering is
+# Inter-cluster variance,
+# "betweenss" is the sum of the distances between points 
+# from different clusters.
+num_edak = kmeans_obj_edak$betweenss
+
+# Total variance, "totss" is the sum of the distances
+# between all the points in the data set.
+denom_edak = kmeans_obj_edak$totss
+
+# Variance accounted for by clusters.
+(var_exp_edak = num_edak / denom_edak)
+```
+
+```{r, echo=FALSE, warning = FALSE, include=FALSE}
+# Now we are going to build a simple decision tree using the clusters as a feature
+
+# reminder this is our model, using 3 clusters 
+set.seed(1980)
+kmeans_obj_edak = kmeans(clust_data_edak, centers = 3,
+                        algorithm = "Lloyd")
+
+#kmeans_obj_nba
+# this is the output of the model. 
+kmeans_obj_edak$cluster
+
+#Append clusters to nbaNor
+edakSta$clusters <- kmeans_obj_edak$cluster
+#View(nbaNor)
+
+clusters = as.factor(kmeans_obj_edak$cluster)
+View(clust_data_edak)
+typeof(clust_data_edak)
+#View(clusters)
+
+View(clusters)
+#nba_cluster$clusters <- kmeans_obj_nba$cluster
+
+edak_cluster = cbind(clust_data_edak,clusters)
+
+#View(nba_cluster)
+
+```
+
+```{r, echo=FALSE, warning = FALSE}
+#view(nba_cluster)
+Ticker = edak$Ticker
+QY = edak$`Quarter & Year`
+RD = edak$`Revenue Delta`
+
+View(edak)
+range(edak$`Revenue Delta`)
+
+#Add back salary and Player to nba_cluster
+edak_cluster = cbind(edak_cluster, Ticker)
+edak_cluster = cbind(edak_cluster, QY)
+edak_cluster = cbind(edak_cluster, RD)
+
+View(edak_cluster)
+#view(nba_cluster)
+```
+
+```{r}
+#View(edak_cluster)
+typeof(edak_cluster)
+#edak_cluster2 <- Map(intToUtf8, as.list(utf8ToInt(edak_cluster)))
+
+
+edak_cluster2 <- as.data.frame(edak_cluster)
+
+#range(edak_cluster2$`Polarity Mean`
+#View(edak_cluster2)
+plt <- ggplot(edak_cluster2,
+              aes(x=`Revenue (E8)`,y=`Polarity Mean`)) +
+  geom_point(aes(color = RD,
+                 shape = as.factor(clusters)),
+             size = 5) +
+  ggtitle("NBA Salaries") +
+  xlab("Assist") +
+  ylab("Points") +
+  scale_shape_manual(name = "Clusters",
+                     labels = c("Cluster 1", "Cluster 2", "Cluster 3"),
+                     values = c("1","2","3")) +
+  
+  scale_color_gradient(low = "green", high = "red") +
+  theme(text = element_text(size = 15),
+        panel.background = element_rect(fill = "white"),
+        panel.grid.minor = element_line(color = NA),
+        panel.grid.major = element_line(color = "grey",
+                                        linetype = "dashed"),
+        panel.border = element_rect(color = "black",
+                                    fill = NA,
+                                    size = 1))
+
+plt
+#dev.off()
+
+```
+
+```{r, echo=FALSE, warning = FALSE}
+#3D Graph
+#View(edak_cluster2)
+#edak_cluster2$`Polarity Mean`
+
+fig <- plot_ly(edak_cluster2,
+               type = "scatter3d",
+               mode = "markers", 
+               symbol = ~clusters,
+               x = ~`Gross Margin`,
+               y = ~Subjectivity,
+               z = ~`Polarity Mean`,
+               color = ~edak_cluster2$clusters,
+               text = ~paste('Ticker:', Ticker))
+
+fig
+#dev.off()
+```
