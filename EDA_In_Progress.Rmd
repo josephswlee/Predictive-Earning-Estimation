@@ -15,6 +15,7 @@ library(textdata)
 library(httr)
 library(rjson)
 ```
+
 ```{r}
 data = read.csv("./EDA - DS4002 - Main Sheet.csv")
 
@@ -22,31 +23,86 @@ data$Ticker = as.factor(data$Ticker)
 data$Quarter...Year = as.factor(data$Quarter...Year)
 names(data)[4] <- "trd_volume_7day"
 data$trd_volume_7day =as.numeric(gsub(",","",data$trd_volume_7day))
+data$Postive.Negative...Neutral =as.numeric(gsub("%","",data$Postive.Negative...Neutral))
+data$Gross.Margin =as.numeric(gsub("%","",data$Gross.Margin))
+data$Gross.Margin = data$Gross.Margin/100
+
+data$Stock.Price.Delta.Between.Dates =as.numeric(gsub("%","",data$Stock.Price.Delta.Between.Dates))
+data$Stock.Price.Delta.Between.Dates = data$Stock.Price.Delta.Between.Dates/100
+
+data$Revenue.Delta =as.numeric(gsub("%","",data$Revenue.Delta))
+data$Revenue.Delta = data$Revenue.Delta/100
+
+data$Gross.Margin.Delta =as.numeric(gsub("%","",data$Gross.Margin.Delta))
+data$Gross.Margin.Delta = data$Gross.Margin.Delta/100
+
+data$Trading.Volume.Delta =as.numeric(gsub("%","",data$Trading.Volume.Delta))
+data$Trading.Volume.Delta = data$Trading.Volume.Delta/100
+
+data$Subjectivity =as.numeric(gsub("%","",data$Subjectivity))
+data$Subjectivity = data$Subjectivity/100
+
 ```
 
 ```{r, fig.width=5, fig,length=20}
   ggplot(data, aes(x=Ticker, y=Market.Cap, color =Quarter...Year)) +
   geom_point(alpha = 1/20) +
   geom_point(size=0.1) +
-  labs(title = "", x="", y="",) +
+  labs(title = "Market Cap by Ticker & Quarter", x="Ticker", y="Market Cap",) +
   geom_jitter()
 ```
 
 ```{r, fig.width=5, fig,length=20}
   ggplot(data, aes(x=Ticker, y=trd_volume_7day)) +
   geom_bar(stat="identity", fill="steelblue") +
-      xlab("State") + ylab("Number of Accidents") + 
-      labs(title="States with Most Accidents (2018-2020)") 
+      xlab("Ticker") + ylab("7 Day Trade Volume") + 
+      labs(title="7 Day Trade Volume by Ticker") 
 ```
 
 
+Here we can see that TSLA and WWW tend to have higher polarities compared to CAKE and XOM. XOM has consistent, low polarity. 
+```{r, fig.width=7, fig.height = 5} 
+  ggplot(data, aes(x=Quarter...Year, y=Polarity.Mean, fill=Ticker)) +
+  geom_bar(stat="identity") +
+      xlab("Quarter Year") + ylab("Mean Polarity") + 
+      labs(title="Tickers per Quarter by Polarity") 
+```
+Here we can see that TSLA and WWW tend to have higher polarities compared to CAKE and XOM. XOM has consistent, low polarity. 
 
 
+```{r, fig.width=7, fig.height = 5} 
+  ggplot(data, aes(x=Quarter...Year, y=Revenue.Delta, fill=Ticker)) +
+  geom_bar(stat="identity") +
+      xlab("Quarter Year") + ylab("Revenue Delta") + 
+      labs(title="Tickers per Quarter by Revenue Delta") 
+```
+Correlation Matrix
+```{r, fig.width=7, fig.height = 7} 
+library(ggcorrplot)
+stock_cor = data[,-c(1,2,3,7,9,20)]
 
+stock_cor = round(cor(stock_cor),1)
+  
+p.mat <- cor_pmat(stock_cor)
+head(p.mat[, 1:4])
+ggcorrplot(stock_cor)
+```
 
+```{r} 
+  ggplot(data, aes(x=Subjectivity, y=Gross.Margin, color =Ticker)) +
+  geom_point(alpha = 1/20) +
+  geom_point(size=0.1) +
+  labs(title = "Subjectivity v Gross Margin", x="Subjectivity", y="Gross Margin",) +
+  geom_jitter() +
+  geom_smooth(method='loess', formula=y~x, se=FALSE)
+```
 
-
-
-
-
+```{r}
+  ggplot(data, aes(x=Postive.Negative...Neutral, y=Gross.Margin, color =Ticker)) +
+  geom_point(alpha = 1/20) +
+  geom_point(size=0.1) +
+  labs(title = "Postive.Negative...Neutral v Gross Margin", x="Postive.Negative...Neutral", y="Gross Margin",) +
+  geom_jitter() +
+  geom_smooth(method='loess', formula=y~x, se=FALSE)
+```
 
