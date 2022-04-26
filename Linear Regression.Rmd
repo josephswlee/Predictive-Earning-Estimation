@@ -1,0 +1,90 @@
+---
+title: "Studies"
+author: "William Cull"
+date: "4/25/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(tidytext)
+library(ggwordcloud)
+library(textdata)
+library(textreadr)
+library(corrplot)
+library(corrr)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+if(!require(devtools)) install.packages("devtools")
+devtools::install_github("kassambara/ggpubr")l
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+mainsheet <- Dataframe_for_lr.csv
+```
+
+```{r}
+
+hist(mainsheet$Gross.Margin)
+hist(mainsheet$Polarity.Mean)
+hist(mainsheet$Postive.Negative...Neutral)
+plot(mainsheet$Stock.Price.Delta.Between.Dates ~ mainsheet$Polarity.Mean, data = mainsheet)
+plot(mainsheet$Stock.Price.Delta.Between.Dates ~ mainsheet$Postive.Negative...Neutral, data = mainsheet)
+plot(mainsheet$Stock.Price.on.Call.Date ~ mainsheet$Polarity.Mean, data = mainsheet)
+plot(mainsheet$Polarity.Mean ~ mainsheet$Stock.Price.on.Call.Date, data = mainsheet)
+spoc.lm <- lm(mainsheet$Stock.Price.on.Call.Date ~ mainsheet$Polarity.Mean, data = mainsheet)
+summary(spoc.lm)
+
+```
+
+
+```{r}
+
+spoc.pol.sub.spc.lm <- lm(mainsheet$Stock.Price.on.Call.Date ~ mainsheet$Polarity.Mean + mainsheet$Subjectivity + mainsheet$Strong.Polarity.Count....0.8., data = mainsheet)
+head(summary(spoc.pol.sub.spc.lm))
+
+```
+
+
+```{r}
+
+par(mfrow=c(2,2))
+plot(spoc.pol.sub.spc.lm)
+
+```
+
+
+```{r}
+sp.delt.all<- lm(mainsheet$Stock.Price.Delta.Between.Dates ~ mainsheet$Polarity.Mean + mainsheet$Subjectivity +mainsheet$Trading.Volume.7.Day.Average.Prior.to.Call.Date + mainsheet$Revenue..E8. + mainsheet$Gross.Margin + mainsheet$EPS.Basic...Diluted + mainsheet$Beta.Value.at.Call.Date + mainsheet$Rating.Score..avg....ROE..DCF..ROA. + mainsheet$Market.Cap + mainsheet$Common.Shares.Outstanding.at.Call.Date + mainsheet$Weak.Polarity.Count.....0.2.+ mainsheet$Postive.Negative...Neutral + mainsheet$Strong.Polarity.Count....0.8., data = mainsheet)
+
+
+summary(sp.delt.all)
+
+
+```
+
+
+```{r}
+par(mfrow=c(2,2))
+plot(sp.delt.all)
+
+
+```
+
